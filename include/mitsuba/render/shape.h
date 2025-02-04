@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mitsuba/core/object.h"
 #include <drjit/call.h>
 #include <mitsuba/render/records.h>
 #include <mitsuba/core/spectrum.h>
@@ -35,8 +36,10 @@ enum class ShapeType : uint32_t {
     Sphere = 7u,
     /// Instance (`instance`)
     Instance = 8u,
+    /// ShapeGroup (`shapegroup`)
+    ShapeGroup = 9u,
     /// Other shapes
-    Other = 9u
+    Other = 10u
 };
 MI_DECLARE_ENUM_OPERATORS(ShapeType)
 
@@ -766,20 +769,14 @@ public:
     //! @{ \name Miscellaneous
     // =============================================================
 
-    /// Return a string identifier
-    std::string id() const override { return m_id; }
-
-    /// Set a string identifier
-    void set_id(const std::string& id) override { m_id = id; };
-
     /// Is this shape a triangle mesh?
     bool is_mesh() const { return (shape_type() == +ShapeType::Mesh); };
 
     /// Returns the shape type \ref ShapeType of this shape
     uint32_t shape_type() const { return (uint32_t) m_shape_type; }
 
-    /// Is this shape a shapegroup?
-    bool is_shapegroup() const { return class_()->name() == "ShapeGroupPlugin"; };
+    /// Is this shape a shape group?
+    bool is_shape_group() const { return (shape_type() == +ShapeType::ShapeGroup); };
 
     /// Is this shape an instance?
     bool is_instance() const { return (shape_type() == +ShapeType::Instance); };
@@ -948,7 +945,7 @@ public:
     //! @}
     // =============================================================
 
-    MI_DECLARE_CLASS()
+    MI_DECLARE_PLUGIN_BASE_CLASS(Shape)
 
 protected:
     Shape(const Properties &props);
@@ -1076,10 +1073,10 @@ NAMESPACE_END(mitsuba)
     MI_IMPLEMENT_RAY_INTERSECT_PACKET(16)
 
 // -----------------------------------------------------------------------
-//! @{ \name Dr.Jit support for vectorized function calls
+//! @{ \name Enables vectorized method calls on Dr.Jit arrays of shapes
 // -----------------------------------------------------------------------
 
-MI_CALL_TEMPLATE_BEGIN(Shape)
+DRJIT_CALL_TEMPLATE_BEGIN(mitsuba::Shape)
     DRJIT_CALL_METHOD(compute_surface_interaction)
     DRJIT_CALL_METHOD(has_attribute)
     DRJIT_CALL_METHOD(eval_attribute)
@@ -1112,7 +1109,7 @@ MI_CALL_TEMPLATE_BEGIN(Shape)
     auto is_mesh() const { return shape_type() == (uint32_t) mitsuba::ShapeType::Mesh; }
     auto is_medium_transition() const { return interior_medium() != nullptr ||
                                                exterior_medium() != nullptr; }
-MI_CALL_TEMPLATE_END(Shape)
+DRJIT_CALL_END()
 
 //! @}
 // -----------------------------------------------------------------------
