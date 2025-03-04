@@ -19,15 +19,15 @@ MI_VARIANT ShapeGroup<Float, Spectrum>::ShapeGroup(const Properties &props) {
 
     // Add children to the underlying data structure
     for (auto &kv : props.objects()) {
-        const Class *c_class = kv.second->class_();
-        if (c_class->name() == "Instance") {
-            Throw("Nested instancing is not permitted");
-        } else if (c_class->derives_from(MI_CLASS(Base))) {
-            Base *shape = static_cast<Base *>(kv.second.get());
+        Object *o = kv.second;
+
+        if (Base *shape = dynamic_cast<Base *>(o); shape) {
             if (shape->is_shape_group())
                 Throw("Nested ShapeGroup is not permitted");
             if (shape->is_emitter())
                 Throw("Instancing of emitters is not supported");
+            if (shape->is_instance())
+                Throw("Nested instancing is not permitted");
             if (shape->is_sensor())
                 Throw("Instancing of sensors is not supported");
             else {
@@ -78,8 +78,6 @@ MI_VARIANT ShapeGroup<Float, Spectrum>::ShapeGroup(const Properties &props) {
             dr::load<DynamicBuffer<UInt32>>(data.get(), m_shapes.size());
     }
 #endif
-
-    MI_REGISTER_OBJECT("ShapeGroup", this);
 }
 
 MI_VARIANT ShapeGroup<Float, Spectrum>::~ShapeGroup() {

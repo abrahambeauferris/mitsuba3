@@ -107,6 +107,5 @@ private:
     std::vector<ref<Object>> m_objects;
 };
 
-MI_IMPLEMENT_CLASS_VARIANT(MergeShape, Shape)
-MI_EXPORT_PLUGIN(MergeShape, "MergeShape intersection primitive");
+MI_EXPORT_PLUGIN(MergeShape)
 NAMESPACE_END(mitsuba)

@@ -414,5 +414,5 @@ private:
     Vector2f m_principal_point_offset;
 };
 
-MI_EXPORT_PLUGIN(PerspectiveCamera, "Perspective Camera");
+MI_EXPORT_PLUGIN(PerspectiveCamera)
 NAMESPACE_END(mitsuba)

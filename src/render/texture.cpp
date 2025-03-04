@@ -77,11 +77,11 @@ Texture<Float, Spectrum>::D65(ref<Texture> texture) {
     if constexpr (!is_spectral_v<Spectrum>) {
         return texture;
     } else {
-        const char *plugins[] = {
-            "srgb", "bitmap", "checkerboard", "mesh_attribute"
+        const std::string_view plugins[] = {
+            "SRGBReflectanceSpectrum", "BitmapTextureImpl", "checkerboard", "MeshAttribute"
         };
-        for (const char *name : plugins) {
-            if (strcmp(texture->class_name(), name) != 0)
+        for (auto name : plugins) {
+            if (texture->class_name() == name)
                 continue;
             Properties props("d65");
             props.set("nested", ref<Object>(texture));
@@ -93,10 +93,6 @@ Texture<Float, Spectrum>::D65(ref<Texture> texture) {
         }
         return texture;
     }
-}
-
-MI_VARIANT ObjectType Texture<Float, Spectrum>::type() const {
-    return ObjectType::Texture;
 }
 
 MI_VARIANT typename Texture<Float, Spectrum>::ScalarVector2i

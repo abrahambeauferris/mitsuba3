@@ -311,7 +311,7 @@ std::ostream &operator<<(std::ostream &os, const Properties &p) {
 
 template <typename T>
 void Properties::set(std::string_view name, const T &value, bool error_duplicates) {
-    auto [it, success] = d->entries.insert_or_assign(name, value);
+    auto [it, success] = d->entries.insert_or_assign(std::string(name), value);
     if (!success && error_duplicates)
         Throw("Property \"%s\" was specified multiple times!", name);
 }
