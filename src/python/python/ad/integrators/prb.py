@@ -144,6 +144,52 @@ class PRBIntegrator(RBIntegrator):
                 si, sampler.next_2d(), True, active_em)
             active_em &= (ds.pdf != 0.0)
 
+            # For non
+            with dr.resume_grad(when=not primal):
+                if dr.hint(not primal, mode='scalar'):
+                    active_diff_em = (
+                        active_em &
+                        mi.has_flag(ds.emitter.flags(), mi.EmitterFlags.SpatiallyVarying) &
+                        mi.has_flag(ds.emitter.flags(), mi.EmitterFlags.Surface)
+                    )
+
+                    ray_em = si.spawn_ray_to(ds.p)
+                    ray_em.maxt = dr.largest(ray_em.maxt)
+                    si_em = scene.ray_intersect(ray_em, active_diff_em)
+
+                    print(f"{dr.width(ds.delta)=}")
+                    print(f"{dr.width(ds.emitter)=}")
+
+                    ds_diff = mi.DirectionSample3f(scene, si_em, si)
+                    #ds.p = dr.replace_grad(ds.p, dr.select(active_diff_em, ds_diff.p, 0))
+                    #ds.uv = dr.replace_grad(ds.uv, dr.select(active_diff_em, ds_diff.uv, 0))
+                    #ds.n = dr.replace_grad(ds.n, dr.select(active_diff_em, ds_diff.n, 0))
+                    ds = dr.replace_grad(
+                        ds,
+                        ds_diff
+                        #dr.select(
+                        #    active_diff_em, 
+                        #    ds_diff,
+                        #    dr.zeros(mi.DirectionSample3f, dr.width(ds))
+                        #)
+                    )
+
+                    #print(f"{dr.width(ds)=}")
+                    print(f"{dr.width(ds.p)=}")
+                    print(f"{dr.width(ds.uv)=}")
+                    print(f"{dr.width(ds.n)=}")
+                    print(f"{dr.width(ds.time)=}")
+                    print(f"{dr.width(ds.pdf)=}")
+                    print(f"{dr.width(ds.delta)=}")
+                    print(f"{dr.width(ds_diff.delta)=}")
+                    print(f"{dr.width(ds.d)=}")
+                    print(f"{dr.width(ds.dist)=}")
+                    print(f"{dr.width(ds.emitter)=}")
+                    print(f"{dr.width(ds_diff.emitter)=}")
+
+                    #ds.uv = dr.replace_grad(ds.uv, dr.select(active_diff_em, si_em.uv, 0))
+
+
             with dr.resume_grad(when=not primal):
                 if dr.hint(not primal, mode='scalar'):
                     # Given the detached emitter sample, *recompute* its
