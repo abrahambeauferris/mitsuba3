@@ -177,6 +177,24 @@ class DirectProjectiveIntegrator(PSIntegrator):
             # phase
             if not primal:
                 # Re-compute attached `emitter_val` to enable emitter optimization
+                active_diff_em = (
+                    active_em &
+                    mi.has_flag(ds_em.emitter.flags(), mi.EmitterFlags.SpatiallyVarying) &
+                    mi.has_flag(ds_em.emitter.flags(), mi.EmitterFlags.Surface)
+                )
+                ray_em = si.spawn_ray_to(ds_em.p)
+                ray_em.maxt = dr.largest(ray_em.maxt)
+                si_em = scene.ray_intersect(ray_em, active_diff_em)
+
+                ds_diff = mi.DirectionSample3f(scene, si_em, si)
+                ds_em.p = dr.replace_grad(ds_em.p, dr.select(active_diff_em, ds_diff.p, 0))
+                ds_em.n = dr.replace_grad(ds_em.n, dr.select(active_diff_em, ds_diff.n, 0))
+                ds_em.uv = dr.replace_grad(ds_em.uv, dr.select(active_diff_em, ds_diff.uv, 0))
+                ds_em.time = dr.replace_grad(ds_em.time, dr.select(active_diff_em, ds_diff.time, 0))
+                ds_em.pdf = dr.replace_grad(ds_em.pdf, dr.select(active_diff_em, ds_diff.pdf, 0))
+                ds_em.d = dr.replace_grad(ds_em.d, dr.select(active_diff_em, ds_diff.d, 0))
+                ds_em.dist = dr.replace_grad(ds_em.dist, dr.select(active_diff_em, ds_diff.dist, 0))
+
                 ds_em.d = dr.normalize(ds_em.p - si.p)
                 spec_em = scene.eval_emitter_direction(si, ds_em, active_em)
                 emitter_val = spec_em / ds_em.pdf
@@ -281,6 +299,11 @@ class DirectProjectiveIntegrator(PSIntegrator):
             # foreground interaction. Overwrite the incident direction to avoid
             # potential issues introduced by smooth normals.
             si_fg.wi = mi.Vector3f(0, 0, 1)
+
+            si_fg.uv = ss.uv
+            si_fg.p = ss.p
+            si_fg.n = ss.n
+
             radiance_fg = ss.shape.emitter().eval(si_fg, active)
         elif curr_depth == 0:
 
