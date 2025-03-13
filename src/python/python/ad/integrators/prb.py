@@ -145,29 +145,28 @@ class PRBIntegrator(RBIntegrator):
             active_em &= (ds.pdf != 0.0)
 
             with dr.resume_grad(when=not primal):
+                # Given the detached emitter sample, *recompute* its
+                # contribution with AD to enable light source optimization
                 if dr.hint(not primal, mode='scalar'):
-                    # Given the detached emitter sample, *recompute* its
-                    # contribution with AD to enable light source optimization
 
-                    # For textured area lights, we need to a differentiable
-                    # ray intersection to track the UV change
+                    # For textured area lights, we need to do a differentiable
+                    # ray intersection to track UV changes
                     active_diff_em = (
                         active_em &
                         mi.has_flag(ds.emitter.flags(), mi.EmitterFlags.SpatiallyVarying) &
                         mi.has_flag(ds.emitter.flags(), mi.EmitterFlags.Surface)
                     )
+
+                    # Visibility is already accounted for, we can move the ray
+                    # origin closer to the surface
                     ray_em = si.spawn_ray_to(ds.p)
-                    ray_em.maxt = dr.largest(ray_em.maxt)
+                    ray_em.o = dr.fma(ray_em.d, ray_em.maxt, ray_em.o) 
+                    ray_em.maxt = dr.largest(ray_em.maxt) 
                     si_em = scene.ray_intersect(ray_em, active_diff_em)
 
                     ds_diff = mi.DirectionSample3f(scene, si_em, si)
-                    ds.p = dr.replace_grad(ds.p, dr.select(active_diff_em, ds_diff.p, 0))
-                    ds.n = dr.replace_grad(ds.n, dr.select(active_diff_em, ds_diff.n, 0))
-                    ds.uv = dr.replace_grad(ds.uv, dr.select(active_diff_em, ds_diff.uv, 0))
-                    ds.time = dr.replace_grad(ds.time, dr.select(active_diff_em, ds_diff.time, 0))
-                    ds.pdf = dr.replace_grad(ds.pdf, dr.select(active_diff_em, ds_diff.pdf, 0))
-                    ds.d = dr.replace_grad(ds.d, dr.select(active_diff_em, ds_diff.d, 0))
-                    ds.dist = dr.replace_grad(ds.dist, dr.select(active_diff_em, ds_diff.dist, 0))
+                    ds_diff = dr.select(active_diff_em, ds_diff, dr.zeros(mi.DirectionSample3f))
+                    ds = dr.replace_grad(ds, ds_diff)
 
                     ds.d = dr.replace_grad(ds.d, dr.normalize(ds.p - si.p))
                     em_val = scene.eval_emitter_direction(si, ds, active_em)

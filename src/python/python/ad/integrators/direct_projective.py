@@ -187,13 +187,8 @@ class DirectProjectiveIntegrator(PSIntegrator):
                 si_em = scene.ray_intersect(ray_em, active_diff_em)
 
                 ds_diff = mi.DirectionSample3f(scene, si_em, si)
-                ds_em.p = dr.replace_grad(ds_em.p, dr.select(active_diff_em, ds_diff.p, 0))
-                ds_em.n = dr.replace_grad(ds_em.n, dr.select(active_diff_em, ds_diff.n, 0))
-                ds_em.uv = dr.replace_grad(ds_em.uv, dr.select(active_diff_em, ds_diff.uv, 0))
-                ds_em.time = dr.replace_grad(ds_em.time, dr.select(active_diff_em, ds_diff.time, 0))
-                ds_em.pdf = dr.replace_grad(ds_em.pdf, dr.select(active_diff_em, ds_diff.pdf, 0))
-                ds_em.d = dr.replace_grad(ds_em.d, dr.select(active_diff_em, ds_diff.d, 0))
-                ds_em.dist = dr.replace_grad(ds_em.dist, dr.select(active_diff_em, ds_diff.dist, 0))
+                ds_diff = dr.select(active_diff_em, ds_diff, dr.zeros(mi.DirectionSample3f))
+                ds_em = dr.replace_grad(ds_em, ds_diff)
 
                 ds_em.d = dr.normalize(ds_em.p - si.p)
                 spec_em = scene.eval_emitter_direction(si, ds_em, active_em)
