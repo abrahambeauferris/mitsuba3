@@ -167,7 +167,6 @@ public:
                                      /* ray_flags = */ +RayFlags::All,
                                      /* coherent = */ ls.depth == 0u);
 
-
             // ---------------------- Hide area emitters ----------------------
 
             /* dr::any_or() checks for active entries in the provided boolean

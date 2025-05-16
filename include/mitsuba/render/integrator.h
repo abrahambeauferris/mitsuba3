@@ -312,18 +312,6 @@ public:
      */
     virtual std::vector<std::string> aov_names() const;
 
-    /// Return a string identifier
-    std::string id() const override { return m_id; }
-
-    /// Set a string identifier
-    void set_id(const std::string& id) override { m_id = id; };
-
-    MI_DECLARE_CLASS()
-
-protected:
-    /// Create an integrator
-    Integrator(const Properties & props);
-
     /**
      * \brief Traces a ray in the scene and returns the first intersection that
      * is not an area emitter.
@@ -344,9 +332,20 @@ protected:
      * \return
      *    The first intersection that is not an area emitter anlong the ``ray``.
      */
-    SurfaceInteraction3f skip_area_emitters(const Scene *scene,
-                                            const Ray3f &ray,
-                                            Mask active) const;
+    SurfaceInteraction3f
+    skip_area_emitters(const Scene *scene, const Ray3f &ray, Mask active) const;
+
+    /// Return a string identifier
+    std::string id() const override { return m_id; }
+
+    /// Set a string identifier
+    void set_id(const std::string& id) override { m_id = id; };
+
+    MI_DECLARE_CLASS()
+
+protected:
+    /// Create an integrator
+    Integrator(const Properties & props);
 
 protected:
     /// Integrators should stop all work when this flag is set to true.
